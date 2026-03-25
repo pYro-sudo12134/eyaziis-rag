@@ -968,6 +968,46 @@ def update_message():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/update_semantic_analysis', methods=['POST', 'OPTIONS'])
+def update_semantic_analysis():
+    """Обновить семантический анализ (после ручного редактирования)"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        session_id = data.get('session_id', 'default_session')
+        message_index = data.get('message_index')
+        updated_analysis = data.get('semantic_analysis')
+        
+        if message_index is None or not updated_analysis:
+            return jsonify({'error': 'message_index and semantic_analysis are required'}), 400
+        
+        history = s3_storage.load_dialog_history(session_id) or []
+        
+        for i, msg in enumerate(history):
+            if i == message_index and msg.get('role') == 'assistant':
+                msg['semantic_analysis'] = updated_analysis
+                msg['edited'] = True
+                msg['edited_at'] = datetime.now().isoformat()
+                break
+        
+        s3_storage.save_dialog_history(session_id, history)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Semantic analysis updated',
+            'session_id': session_id,
+            'message_index': message_index
+        })
+        
+    except Exception as e:
+        print(f"Error updating semantic analysis: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/delete_message', methods=['POST', 'OPTIONS'])
 def delete_message():

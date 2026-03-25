@@ -911,40 +911,163 @@
             }
             
             contentHtml += `</div>`;
-            
-            contentHtml += `<div class="message-actions">`;
-            
-            if (role === 'user') {
-                contentHtml += `<button onclick="editMessage(${actualIndex})">Редактировать</button>`;
-                contentHtml += `<button onclick="deleteMessage(${actualIndex})">Удалить</button>`;
-            } else if (role === 'assistant') {
-                contentHtml += `<button onclick="regenerateResponse(${actualIndex})">Перегенерировать</button>`;
-                contentHtml += `<button onclick="editMessage(${actualIndex})">Редактировать</button>`;
-                contentHtml += `<button onclick="deleteMessage(${actualIndex})">Удалить</button>`;
-                if (syntaxTree) {
-                    contentHtml += `<button onclick="editSyntaxTree(${actualIndex})">Редактировать дерево</button>`;
-                }
-            }
-            
-            contentHtml += `</div>`;
+            contentHtml += `<div class="message-actions" id="actions-${actualIndex}"></div>`;
             
             messageDiv.innerHTML = contentHtml;
             messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
             
-            if (messageIndex === null) {
-                messagesList.push({
-                    role: role,
-                    content: content,
-                    syntaxTree: syntaxTree,
-                    semanticAnalysis: semanticAnalysis,
-                    element: messageDiv,
-                    index: messagesList.length,
-                    isEdited: isEdited
-                });
+            const actionsDiv = messageDiv.querySelector('.message-actions');
+            
+            if (role === 'user') {
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Редактировать';
+                editBtn.onclick = () => editMessage(actualIndex);
+                actionsDiv.appendChild(editBtn);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Удалить';
+                deleteBtn.onclick = () => deleteMessage(actualIndex);
+                actionsDiv.appendChild(deleteBtn);
+                
+            } else if (role === 'assistant') {
+                const regenerateBtn = document.createElement('button');
+                regenerateBtn.textContent = 'Перегенерировать';
+                regenerateBtn.onclick = () => regenerateResponse(actualIndex);
+                actionsDiv.appendChild(regenerateBtn);
+                
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Редактировать';
+                editBtn.onclick = () => editMessage(actualIndex);
+                actionsDiv.appendChild(editBtn);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Удалить';
+                deleteBtn.onclick = () => deleteMessage(actualIndex);
+                actionsDiv.appendChild(deleteBtn);
+                
+                if (syntaxTree) {
+                    const editTreeBtn = document.createElement('button');
+                    editTreeBtn.textContent = 'Редактировать дерево';
+                    editTreeBtn.onclick = () => editSyntaxTree(actualIndex);
+                    actionsDiv.appendChild(editTreeBtn);
+                }
+                
+                if (semanticAnalysis) {
+                    const editSemanticBtn = document.createElement('button');
+                    editSemanticBtn.textContent = 'Редактировать семантику';
+                    editSemanticBtn.onclick = () => editSemanticAnalysis(actualIndex);
+                    actionsDiv.appendChild(editSemanticBtn);
+                }
             }
             
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            messagesList.push({
+                role: role,
+                content: content,
+                syntaxTree: syntaxTree,
+                semanticAnalysis: semanticAnalysis,
+                element: messageDiv,
+                index: messagesList.length,
+                isEdited: isEdited
+            });
+            
             return actualIndex;
+        }
+
+        function editSemanticAnalysis(messageIndex) {
+            const message = messagesList[messageIndex];
+            if (!message || !message.semanticAnalysis) {
+                alert('Нет семантического анализа для редактирования');
+                return;
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            
+            const editor = document.createElement('div');
+            editor.className = 'syntax-tree-editor';
+            editor.style.maxWidth = '900px';
+            editor.innerHTML = `
+                <h3 style="margin-bottom: 12px;">Редактирование семантического анализа</h3>
+                <textarea id="semantic-editor-textarea" style="width:100%; min-height:400px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ddd; border-radius:8px;">${JSON.stringify(message.semanticAnalysis, null, 2)}</textarea>
+                <div style="margin-top: 12px;">
+                    <button id="save-semantic-btn" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить</button>
+                    <button id="cancel-semantic-btn" style="padding: 8px 16px; margin-left: 8px; background: #ccc; border: none; border-radius: 6px; cursor: pointer;">Отмена</button>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: #666;">
+                    <strong>Формат JSON:</strong><br>
+                    {
+                        "syntax_tree": {...},
+                        "semantic_roles": [
+                            {
+                                "predicate": "глагол",
+                                "agent": "кто",
+                                "patient": "кого",
+                                "location": "где",
+                                "temporal": "когда"
+                            }
+                        ],
+                        "semantic_relations": [
+                            {
+                                "type": "hypernym|hyponym|synonym|antonym|cause_effect|part_whole",
+                                "word1": "слово1",
+                                "word2": "слово2",
+                                "explanation": "пояснение"
+                            }
+                        ],
+                        "summary": {
+                            "predicate_center": "центральный предикат",
+                            "participants": ["участник1", "участник2"],
+                            "circumstances": ["обстоятельство1"],
+                            "complexity": "простое|сложное",
+                            "type": "повествовательное|вопросительное|побудительное"
+                        }
+                    }
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(editor);
+            
+            const textarea = editor.querySelector('#semantic-editor-textarea');
+            
+            editor.querySelector('#save-semantic-btn').onclick = async () => {
+                try {
+                    const updatedAnalysis = JSON.parse(textarea.value);
+                    
+                    const response = await fetch('/api/update_semantic_analysis', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            session_id: 'web_session',
+                            message_index: messageIndex,
+                            semantic_analysis: updatedAnalysis
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        message.semanticAnalysis = updatedAnalysis;
+                        currentSemanticAnalysis = updatedAnalysis;
+                        renderSemanticAnalysis(updatedAnalysis);
+                        alert('Семантический анализ обновлен');
+                        editor.remove();
+                        overlay.remove();
+                        
+                        await saveHistory();
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                } catch (e) {
+                    alert('Ошибка парсинга JSON: ' + e.message);
+                }
+            };
+            
+            editor.querySelector('#cancel-semantic-btn').onclick = () => {
+                editor.remove();
+                overlay.remove();
+            };
         }
         
         async function editMessage(messageIndex) {
@@ -1065,24 +1188,58 @@
                     }
                     
                     messagesList.splice(messageIndex, 1);
+                    
                     messagesList.forEach((msg, idx) => {
                         msg.index = idx;
+                        
                         const contentDiv = msg.element.querySelector('.message-content');
                         if (contentDiv) {
                             contentDiv.setAttribute('data-message-index', idx);
                         }
-                        const actions = msg.element.querySelector('.message-actions');
-                        if (actions) {
-                            actions.innerHTML = '';
+                        
+                        const actionsDiv = msg.element.querySelector('.message-actions');
+                        if (actionsDiv) {
+                            actionsDiv.innerHTML = '';
+                            
                             if (msg.role === 'user') {
-                                actions.innerHTML += `<button onclick="editMessage(${idx})">Редактировать</button>`;
-                                actions.innerHTML += `<button onclick="deleteMessage(${idx})">Удалить</button>`;
+                                const editBtn = document.createElement('button');
+                                editBtn.textContent = 'Редактировать';
+                                editBtn.onclick = () => editMessage(idx);
+                                actionsDiv.appendChild(editBtn);
+                                
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.textContent = 'Удалить';
+                                deleteBtn.onclick = () => deleteMessage(idx);
+                                actionsDiv.appendChild(deleteBtn);
+                                
                             } else if (msg.role === 'assistant') {
-                                actions.innerHTML += `<button onclick="regenerateResponse(${idx})">Перегенерировать</button>`;
-                                actions.innerHTML += `<button onclick="editMessage(${idx})">Редактировать</button>`;
-                                actions.innerHTML += `<button onclick="deleteMessage(${idx})">Удалить</button>`;
+                                const regenerateBtn = document.createElement('button');
+                                regenerateBtn.textContent = 'Перегенерировать';
+                                regenerateBtn.onclick = () => regenerateResponse(idx);
+                                actionsDiv.appendChild(regenerateBtn);
+                                
+                                const editBtn = document.createElement('button');
+                                editBtn.textContent = 'Редактировать';
+                                editBtn.onclick = () => editMessage(idx);
+                                actionsDiv.appendChild(editBtn);
+                                
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.textContent = 'Удалить';
+                                deleteBtn.onclick = () => deleteMessage(idx);
+                                actionsDiv.appendChild(deleteBtn);
+                                
                                 if (msg.syntaxTree) {
-                                    actions.innerHTML += `<button onclick="editSyntaxTree(${idx})">Редактировать дерево</button>`;
+                                    const editTreeBtn = document.createElement('button');
+                                    editTreeBtn.textContent = 'Редактировать дерево';
+                                    editTreeBtn.onclick = () => editSyntaxTree(idx);
+                                    actionsDiv.appendChild(editTreeBtn);
+                                }
+                                
+                                if (msg.semanticAnalysis) {
+                                    const editSemanticBtn = document.createElement('button');
+                                    editSemanticBtn.textContent = 'Редактировать семантику';
+                                    editSemanticBtn.onclick = () => editSemanticAnalysis(idx);
+                                    actionsDiv.appendChild(editSemanticBtn);
                                 }
                             }
                         }
@@ -1107,11 +1264,9 @@
             }
             
             let userMessage = null;
-            let userMessageIndex = -1;
             for (let i = messageIndex - 1; i >= 0; i--) {
                 if (messagesList[i].role === 'user') {
                     userMessage = messagesList[i].content;
-                    userMessageIndex = i;
                     break;
                 }
             }
@@ -1160,6 +1315,14 @@
                     }
                     
                     await saveHistory();
+                    
+                    const actionsDiv = message.element.querySelector('.message-actions');
+                    if (actionsDiv && message.semanticAnalysis && !actionsDiv.innerHTML.includes('Редактировать семантику')) {
+                        const editSemanticBtn = document.createElement('button');
+                        editSemanticBtn.textContent = 'Редактировать семантику';
+                        editSemanticBtn.onclick = () => editSemanticAnalysis(messageIndex);
+                        actionsDiv.appendChild(editSemanticBtn);
+                    }
                 } else {
                     alert('Ошибка: ' + data.error);
                 }
@@ -1579,7 +1742,15 @@
                         const syntaxTree = msg.syntax_tree || null;
                         const semanticAnalysis = msg.semantic_analysis || null;
                         const isEdited = msg.edited || false;
+                        
                         addMessage(msg.role, msg.content, idx, syntaxTree, semanticAnalysis, isEdited);
+                        
+                        const lastMsg = messagesList[messagesList.length - 1];
+                        if (lastMsg) {
+                            lastMsg.syntaxTree = syntaxTree;
+                            lastMsg.semanticAnalysis = semanticAnalysis;
+                            lastMsg.isEdited = isEdited;
+                        }
                     });
                     
                     showStatus('uploadStatus', `Загружено ${data.history.length} сообщений`, 'success');
