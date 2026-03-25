@@ -12,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 class S3StorageService:
     """
-    Сервис для работы с S3-совместимым хранилищем (LocalStack, AWS S3, MinIO)
-    Использует единую конфигурацию из config.py
+    Сервис для работы с S3-совместимым хранилищем (LocalStack, AWS S3)
     """
     
     def __init__(self):
