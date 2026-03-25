@@ -24,4 +24,4 @@ class Answer(BaseModel):
     text: str
     sources: List[SearchResult] = []
     syntax_tree: Optional[Dict] = None
-    thinking: Optional[str] = None  # для отладки
+    thinking: Optional[str] = None

@@ -1,12 +1,10 @@
-import sys
 import os
 import traceback
-import uuid
 import json
 import tempfile
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from rag_agent.agent import RAGAgent
 from rag_agent.models.schemas import Query
