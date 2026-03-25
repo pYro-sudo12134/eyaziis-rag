@@ -116,7 +116,6 @@ def upload_document():
                 'preview': result['text'][:500] + '...' if len(result['text']) > 500 else result['text']
             })
         finally:
-            # Удаляем временный файл
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
     
@@ -752,7 +751,6 @@ def stats():
         print(f"Error in stats endpoint: {e}")
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/api/s3_browse', methods=['GET'])
 def s3_browse():

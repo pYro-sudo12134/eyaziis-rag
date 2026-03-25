@@ -147,6 +147,7 @@ class VectorStore:
         
         search_body = {
             'size': top_k,
+            'min_score': 0.5,
             'query': {
                 'bool': {
                     'should': [
@@ -163,6 +164,7 @@ class VectorStore:
                             'match': {
                                 'text': {
                                     'query': query,
+                                    'fuzziness' : 'AUTO',
                                     'boost': 1 - knn_weight
                                 }
                             }
