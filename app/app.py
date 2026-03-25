@@ -447,7 +447,6 @@ def domain():
 
 @app.route('/api/chat', methods=['POST', 'OPTIONS'])
 def chat():
-    """API чата с сохранением истории в S3"""
     if request.method == 'OPTIONS':
         return '', 200
     
@@ -466,17 +465,21 @@ def chat():
         query = Query(text=message, session_id=session_id)
         answer = agent.answer(query, include_syntax=include_syntax)
         
+        semantic_analysis = agent.semantic_analysis(message) if include_syntax else None
+        
         history = s3_storage.load_dialog_history(session_id) or []
         history.append({
             'role': 'user',
             'content': message,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'semantic_analysis': semantic_analysis
         })
         history.append({
             'role': 'assistant',
             'content': answer.text,
             'timestamp': datetime.now().isoformat(),
-            'syntax_tree': answer.syntax_tree
+            'syntax_tree': answer.syntax_tree,
+            'semantic_analysis': semantic_analysis
         })
         
         s3_storage.save_dialog_history(session_id, history)
@@ -484,6 +487,7 @@ def chat():
         return jsonify({
             'response': answer.text,
             'syntax_tree': answer.syntax_tree,
+            'semantic_analysis': semantic_analysis,
             'sources': [{'text': s.text, 'score': s.score} for s in answer.sources]
         })
     
@@ -923,12 +927,9 @@ def update_syntax_tree():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-
 @app.route('/api/update_message', methods=['POST', 'OPTIONS'])
 def update_message():
-    """
-    Обновить сообщение в истории чата
-    """
+    """Обновить сообщение в истории чата"""
     if request.method == 'OPTIONS':
         return '', 200
     
@@ -940,7 +941,6 @@ def update_message():
         session_id = data.get('session_id', 'default_session')
         message_index = data.get('message_index')
         new_content = data.get('content')
-        role = data.get('role')
         
         if message_index is None or not new_content:
             return jsonify({'error': 'message_index and content are required'}), 400
@@ -949,8 +949,6 @@ def update_message():
         
         if 0 <= message_index < len(history):
             history[message_index]['content'] = new_content
-            if role:
-                history[message_index]['role'] = role
             history[message_index]['edited'] = True
             history[message_index]['edited_at'] = datetime.now().isoformat()
         else:

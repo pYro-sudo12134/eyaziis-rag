@@ -12,4 +12,6 @@ awslocal s3api put-bucket-cors --bucket rag-documents --cors-configuration '{
   ]
 }'
 
-echo "S3 bucket 'rag-documents' created successfully"
+awslocal s3api put-object --bucket rag-documents --key results/
+awslocal s3api put-object --bucket rag-documents --key uploads/
+awslocal s3api put-object --bucket rag-documents --key results/history/

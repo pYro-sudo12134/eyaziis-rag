@@ -154,7 +154,6 @@
             color: #333;
         }
         
-        /* Стили для редактирования */
         .message-actions {
             margin-top: 5px;
             font-size: 11px;
@@ -748,7 +747,7 @@
             <div id="tab-help" class="tab-content" style="padding: 16px 0 0 0;">
                 <div class="help-section">
                     <h4>О системе</h4>
-                    <p>RAG Agent - интеллектуальная система анализа текста с использованием Retrieval-Augmented Generation (RAG). Система сочетает семантический поиск по загруженным документам с генерацией ответов на основе LLM.</p>
+                    <p>RAG Agent - интеллектуальная система анализа текста c использованием Retrieval-Augmented Generation (RAG). Система сочетает семантический поиск по загруженным документам с генерацией ответов на основе LLM.</p>
                 </div>
                 
                 <div class="help-section">
@@ -840,7 +839,7 @@
                 <div class="help-section">
                     <h4>API Endpoints</h4>
                     <ul>
-                        <li><code>POST /api/chat</code> - основной чат с RAG</li>
+                        <li><code>POST /api/chat</code> - основной чат c RAG</li>
                         <li><code>POST /api/upload</code> - загрузка документа</li>
                         <li><code>POST /api/semantic_analysis</code> - полный семантико-синтаксический анализ</li>
                         <li><code>GET /api/stats</code> - статистика системы</li>
@@ -898,7 +897,7 @@
             }
         }
         
-        function addMessage(role, content, messageIndex = null, syntaxTree = null, isEdited = false) {
+        function addMessage(role, content, messageIndex = null, syntaxTree = null, semanticAnalysis = null, isEdited = false) {
             const messagesDiv = document.getElementById('messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
@@ -938,6 +937,7 @@
                     role: role,
                     content: content,
                     syntaxTree: syntaxTree,
+                    semanticAnalysis: semanticAnalysis,
                     element: messageDiv,
                     index: messagesList.length,
                     isEdited: isEdited
@@ -954,11 +954,9 @@
             const contentDiv = message.element.querySelector('.message-content');
             const originalContent = message.content;
             
-            const cleanContent = originalContent;
-            
             const editor = document.createElement('textarea');
             editor.className = 'message-content-editor';
-            editor.value = cleanContent;
+            editor.value = originalContent;
             editor.rows = 3;
             
             const buttonContainer = document.createElement('div');
@@ -990,17 +988,28 @@
                     
                     const data = await response.json();
                     if (data.success) {
-                        contentDiv.innerHTML = formatMessage(newContent) + '<span class="message-edited-badge">(отредактировано)</span>';
+                        contentDiv.innerHTML = formatMessage(newContent);
+                        if (message.isEdited || true) {
+                            contentDiv.innerHTML += '<span class="message-edited-badge">(отредактировано)</span>';
+                        }
                         message.content = newContent;
                         message.isEdited = true;
                         
-                        if (message.role === 'user' && messagesList[messageIndex + 1]?.role === 'assistant') {
-                            if (confirm('Сообщение изменено. Перегенерировать ответ ассистента?')) {
-                                await regenerateResponse(messageIndex + 1);
+                        if (message.role === 'user') {
+                            const nextAssistant = messagesList.find((msg, idx) => idx > messageIndex && msg.role === 'assistant');
+                            if (nextAssistant) {
+                                if (confirm('Сообщение изменено. Перегенерировать ответ ассистента?')) {
+                                    const assistantIndex = messagesList.findIndex((msg, idx) => idx > messageIndex && msg.role === 'assistant');
+                                    if (assistantIndex !== -1) {
+                                        await regenerateResponse(assistantIndex);
+                                    }
+                                }
                             }
                         }
                         
                         await saveHistory();
+                        
+                        contentDiv.classList.remove('editable');
                     } else {
                         alert('Ошибка сохранения: ' + data.error);
                     }
@@ -1012,6 +1021,7 @@
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = 'Отмена';
             cancelBtn.style.padding = '4px 12px';
+            cancelBtn.style.marginLeft = '8px';
             cancelBtn.style.background = '#ccc';
             cancelBtn.style.border = 'none';
             cancelBtn.style.borderRadius = '4px';
@@ -1096,6 +1106,21 @@
                 return;
             }
             
+            let userMessage = null;
+            let userMessageIndex = -1;
+            for (let i = messageIndex - 1; i >= 0; i--) {
+                if (messagesList[i].role === 'user') {
+                    userMessage = messagesList[i].content;
+                    userMessageIndex = i;
+                    break;
+                }
+            }
+            
+            if (!userMessage) {
+                alert('Не найден вопрос пользователя для перегенерации');
+                return;
+            }
+            
             try {
                 const response = await fetch('/api/regenerate_response', {
                     method: 'POST',
@@ -1108,19 +1133,33 @@
                 
                 const data = await response.json();
                 if (data.success) {
-                    if (message && message.element) {
-                        const contentDiv = message.element.querySelector('.message-content');
-                        contentDiv.innerHTML = formatMessage(data.new_content) + '<span class="message-edited-badge">(перегенерировано)</span>';
-                        message.content = data.new_content;
-                        message.syntaxTree = data.syntax_tree;
-                        
-                        if (data.syntax_tree) {
-                            currentSyntaxTree = data.syntax_tree;
-                            renderSyntaxTree(data.syntax_tree);
-                        }
-                        
-                        await saveHistory();
+                    const contentDiv = message.element.querySelector('.message-content');
+                    contentDiv.innerHTML = formatMessage(data.new_content) + '<span class="message-edited-badge">(перегенерировано)</span>';
+                    message.content = data.new_content;
+                    message.syntaxTree = data.syntax_tree;
+                    
+                    if (data.syntax_tree) {
+                        currentSyntaxTree = data.syntax_tree;
+                        renderSyntaxTree(data.syntax_tree);
                     }
+                    
+                    try {
+                        const semanticResponse = await fetch('/api/semantic_analysis', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({text: userMessage})
+                        });
+                        const semanticData = await semanticResponse.json();
+                        if (semanticData.success && semanticData.analysis) {
+                            currentSemanticAnalysis = semanticData.analysis;
+                            renderSemanticAnalysis(semanticData.analysis);
+                            message.semanticAnalysis = semanticData.analysis;
+                        }
+                    } catch (semanticError) {
+                        console.error('Error getting semantic analysis:', semanticError);
+                    }
+                    
+                    await saveHistory();
                 } else {
                     alert('Ошибка: ' + data.error);
                 }
@@ -1131,7 +1170,10 @@
         
         function editSyntaxTree(messageIndex) {
             const message = messagesList[messageIndex];
-            if (!message || !message.syntaxTree) return;
+            if (!message || !message.syntaxTree) {
+                alert('Нет синтаксического дерева для редактирования');
+                return;
+            }
             
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
@@ -1140,7 +1182,7 @@
             editor.className = 'syntax-tree-editor';
             editor.innerHTML = `
                 <h3 style="margin-bottom: 12px;">Редактирование синтаксического дерева</h3>
-                <textarea id="tree-editor-textarea">${JSON.stringify(message.syntaxTree, null, 2)}</textarea>
+                <textarea id="tree-editor-textarea" style="width:100%; min-height:300px; font-family:monospace; font-size:12px; padding:10px; border:1px solid #ddd; border-radius:8px;">${JSON.stringify(message.syntaxTree, null, 2)}</textarea>
                 <div style="margin-top: 12px;">
                     <button id="save-tree-btn" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить</button>
                     <button id="cancel-tree-btn" style="padding: 8px 16px; margin-left: 8px; background: #ccc; border: none; border-radius: 6px; cursor: pointer;">Отмена</button>
@@ -1232,7 +1274,8 @@
                 const chatData = await chatResponse.json();
                 
                 removeLoadingMessage(loadingId);
-                const assistantIndex = addMessage('assistant', chatData.response, null, chatData.syntax_tree);
+                
+                const assistantIndex = addMessage('assistant', chatData.response, null, chatData.syntax_tree, chatData.semantic_analysis);
                 
                 if (chatData.sources && chatData.sources.length > 0) {
                     addSources(chatData.sources);
@@ -1243,20 +1286,9 @@
                     renderSyntaxTree(chatData.syntax_tree);
                 }
                 
-                const semanticResponse = await fetch('/api/semantic_analysis', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        text: message,
-                        include_syntax: true
-                    })
-                });
-                
-                const semanticData = await semanticResponse.json();
-                
-                if (semanticData.success && semanticData.analysis) {
-                    currentSemanticAnalysis = semanticData.analysis;
-                    renderSemanticAnalysis(semanticData.analysis);
+                if (chatData.semantic_analysis) {
+                    currentSemanticAnalysis = chatData.semantic_analysis;
+                    renderSemanticAnalysis(chatData.semantic_analysis);
                 }
                 
                 await saveHistory();
@@ -1508,6 +1540,7 @@
                     content: msg.content,
                     timestamp: new Date().toISOString(),
                     syntax_tree: msg.syntaxTree,
+                    semantic_analysis: msg.semanticAnalysis,
                     edited: msg.isEdited || false
                 });
             }
@@ -1544,11 +1577,22 @@
                     
                     data.history.forEach((msg, idx) => {
                         const syntaxTree = msg.syntax_tree || null;
+                        const semanticAnalysis = msg.semantic_analysis || null;
                         const isEdited = msg.edited || false;
-                        addMessage(msg.role, msg.content, idx, syntaxTree, isEdited);
+                        addMessage(msg.role, msg.content, idx, syntaxTree, semanticAnalysis, isEdited);
                     });
                     
                     showStatus('uploadStatus', `Загружено ${data.history.length} сообщений`, 'success');
+                    
+                    const lastAssistant = [...data.history].reverse().find(m => m.role === 'assistant');
+                    if (lastAssistant && lastAssistant.semantic_analysis) {
+                        currentSemanticAnalysis = lastAssistant.semantic_analysis;
+                        renderSemanticAnalysis(lastAssistant.semantic_analysis);
+                    }
+                    if (lastAssistant && lastAssistant.syntax_tree) {
+                        currentSyntaxTree = lastAssistant.syntax_tree;
+                        renderSyntaxTree(lastAssistant.syntax_tree);
+                    }
                 } else {
                     showStatus('uploadStatus', 'Нет сохранённой истории', 'error');
                 }
