@@ -882,6 +882,193 @@ def semantic_relations_endpoint():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/update_syntax_tree', methods=['POST', 'OPTIONS'])
+def update_syntax_tree():
+    """
+    Обновить синтаксическое дерево (после ручного редактирования)
+    """
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        session_id = data.get('session_id', 'default_session')
+        message_index = data.get('message_index')
+        updated_tree = data.get('syntax_tree')
+        
+        if message_index is None or not updated_tree:
+            return jsonify({'error': 'message_index and syntax_tree are required'}), 400
+        
+        history = s3_storage.load_dialog_history(session_id) or []
+        
+        for i, msg in enumerate(history):
+            if i == message_index and msg.get('role') == 'assistant':
+                msg['syntax_tree'] = updated_tree
+                msg['edited'] = True
+                msg['edited_at'] = datetime.now().isoformat()
+                break
+        
+        s3_storage.save_dialog_history(session_id, history)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Syntax tree updated',
+            'session_id': session_id,
+            'message_index': message_index
+        })
+        
+    except Exception as e:
+        print(f"Error updating syntax tree: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/update_message', methods=['POST', 'OPTIONS'])
+def update_message():
+    """
+    Обновить сообщение в истории чата
+    """
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        session_id = data.get('session_id', 'default_session')
+        message_index = data.get('message_index')
+        new_content = data.get('content')
+        role = data.get('role')
+        
+        if message_index is None or not new_content:
+            return jsonify({'error': 'message_index and content are required'}), 400
+        
+        history = s3_storage.load_dialog_history(session_id) or []
+        
+        if 0 <= message_index < len(history):
+            history[message_index]['content'] = new_content
+            if role:
+                history[message_index]['role'] = role
+            history[message_index]['edited'] = True
+            history[message_index]['edited_at'] = datetime.now().isoformat()
+        else:
+            return jsonify({'error': 'Message index out of range'}), 400
+        
+        s3_storage.save_dialog_history(session_id, history)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Message updated',
+            'session_id': session_id,
+            'message_index': message_index
+        })
+        
+    except Exception as e:
+        print(f"Error updating message: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/delete_message', methods=['POST', 'OPTIONS'])
+def delete_message():
+    """
+    Удалить сообщение из истории чата
+    """
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        session_id = data.get('session_id', 'default_session')
+        message_index = data.get('message_index')
+        
+        if message_index is None:
+            return jsonify({'error': 'message_index is required'}), 400
+        
+        history = s3_storage.load_dialog_history(session_id) or []
+        
+        if 0 <= message_index < len(history):
+            deleted = history.pop(message_index)
+        else:
+            return jsonify({'error': 'Message index out of range'}), 400
+        
+        s3_storage.save_dialog_history(session_id, history)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Message deleted',
+            'session_id': session_id,
+            'deleted_message': deleted
+        })
+        
+    except Exception as e:
+        print(f"Error deleting message: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/regenerate_response', methods=['POST', 'OPTIONS'])
+def regenerate_response():
+    """
+    Перегенерировать ответ ассистента
+    """
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        session_id = data.get('session_id', 'default_session')
+        message_index = data.get('message_index')
+        
+        if message_index is None:
+            return jsonify({'error': 'message_index is required'}), 400
+        
+        history = s3_storage.load_dialog_history(session_id) or []
+        
+        user_message = None
+        for i in range(message_index - 1, -1, -1):
+            if history[i].get('role') == 'user':
+                user_message = history[i].get('content')
+                break
+        
+        if not user_message:
+            return jsonify({'error': 'No user message found before this response'}), 400
+        
+        query = Query(text=user_message, session_id=session_id)
+        new_answer = agent.answer(query, include_syntax=True)
+        
+        if 0 <= message_index < len(history) and history[message_index].get('role') == 'assistant':
+            history[message_index]['content'] = new_answer.text
+            history[message_index]['syntax_tree'] = new_answer.syntax_tree
+            history[message_index]['regenerated'] = True
+            history[message_index]['regenerated_at'] = datetime.now().isoformat()
+            history[message_index]['original_content'] = history[message_index].get('content')
+        
+        s3_storage.save_dialog_history(session_id, history)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Response regenerated',
+            'new_content': new_answer.text,
+            'syntax_tree': new_answer.syntax_tree,
+            'message_index': message_index
+        })
+        
+    except Exception as e:
+        print(f"Error regenerating response: {e}")
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @app.errorhandler(404)
 def not_found(error):
     """Обработка 404 ошибок"""

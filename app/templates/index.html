@@ -128,10 +128,12 @@
         .message {
             margin-bottom: 15px;
             display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
         
         .message.user {
-            justify-content: flex-end;
+            align-items: flex-end;
         }
         
         .message-content {
@@ -139,6 +141,7 @@
             padding: 10px 15px;
             border-radius: 18px;
             word-wrap: break-word;
+            position: relative;
         }
         
         .message.user .message-content {
@@ -149,6 +152,108 @@
         .message.assistant .message-content {
             background: #f1f3f4;
             color: #333;
+        }
+        
+        /* Стили для редактирования */
+        .message-actions {
+            margin-top: 5px;
+            font-size: 11px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+        
+        .message-actions button {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .message-actions button:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .message-content.editable {
+            cursor: text;
+            outline: 2px solid #667eea;
+        }
+        
+        .message-content-editor {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #667eea;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+        
+        .syntax-tree-editor {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .syntax-tree-editor textarea {
+            width: 100%;
+            min-height: 300px;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        
+        .message-edited-badge {
+            font-size: 10px;
+            color: #999;
+            margin-left: 8px;
+            font-style: italic;
+        }
+        
+        .tree-edit-btn {
+            padding: 4px 8px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        
+        .tree-edit-btn:hover {
+            background: #5a3a7a;
         }
         
         .input-area {
@@ -528,7 +633,8 @@
                         • Загружай документы (TXT, PDF, DOCX, DOC, HTML, RTF)<br>
                         • Получай синтаксическое дерево предложений<br>
                         • Сохраняй результаты анализа<br>
-                        • Выбирай предметную область
+                        • Выбирай предметную область<br>
+                        • Редактируй сообщения и синтаксические деревья<br>
                     </div>
                 </div>
             </div>
@@ -630,6 +736,10 @@
                         <li><strong>Семантические отношения</strong> - выявление гиперонимов, гипонимов, синонимов, причинно-следственных связей</li>
                         <li><strong>Сохранение результатов</strong> - экспорт анализа в S3 хранилище</li>
                         <li><strong>Предметные области</strong> - настройка контекста для более точных ответов</li>
+                        <li><strong>Редактирование сообщений</span></strong> - изменение текста любых сообщений</li>
+                        <li><strong>Удаление сообщений</span></strong> - удаление отдельных сообщений из истории</li>
+                        <li><strong>Перегенерация ответов</span></strong> - пересоздание ответов ассистента</li>
+                        <li><strong>Редактирование деревьев</span></strong> - ручное редактирование синтаксических деревьев</li>
                     </ul>
                 </div>
                 
@@ -678,6 +788,18 @@
                 <div class="help-section">
                     <h4>Часто задаваемые вопросы</h4>
                     <div class="faq-item">
+                        <div class="faq-question">Как редактировать сообщение?</div>
+                        <div class="faq-answer">Наведите курсор на сообщение и нажмите кнопку "Редактировать". После редактирования сообщение автоматически сохранится в истории.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Как перегенерировать ответ?</div>
+                        <div class="faq-answer">Наведите курсор на ответ ассистента и нажмите кнопку "Перегенерировать". Система создаст новый ответ на основе того же вопроса.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Как редактировать синтаксическое дерево?</div>
+                        <div class="faq-answer">Наведите курсор на ответ ассистента и нажмите кнопку "Редактировать дерево". Откроется редактор JSON, где можно изменить структуру дерева.</div>
+                    </div>
+                    <div class="faq-item">
                         <div class="faq-question">Какие форматы документов поддерживаются?</div>
                         <div class="faq-answer">Поддерживаются TXT, PDF, DOCX, DOC, HTML, RTF. Максимальный размер файла - 50 МБ.</div>
                     </div>
@@ -689,10 +811,6 @@
                         <div class="faq-question">Что такое семантические роли?</div>
                         <div class="faq-answer">Семантические роли описывают функции слов в предложении: Агент (кто выполняет действие), Пациенс (на кого направлено действие), Инструмент (чем выполняется), Локация (где), Время (когда) и другие.</div>
                     </div>
-                    <div class="faq-item">
-                        <div class="faq-question">Как изменить предметную область?</div>
-                        <div class="faq-answer">Выберите область из выпадающего списка в правой панели. Это поможет системе лучше понимать контекст ваших вопросов.</div>
-                    </div>
                 </div>
                 
                 <div class="help-section">
@@ -703,6 +821,10 @@
                         <li><code>POST /api/semantic_analysis</code> - полный семантико-синтаксический анализ</li>
                         <li><code>GET /api/stats</code> - статистика системы</li>
                         <li><code>POST /api/save_result</code> - сохранение результатов</li>
+                        <li><code>POST /api/update_message</code> - обновление сообщения</li>
+                        <li><code>POST /api/delete_message</code> - удаление сообщения</li>
+                        <li><code>POST /api/regenerate_response</code> - перегенерация ответа</li>
+                        <li><code>POST /api/update_syntax_tree</code> - обновление синтаксического дерева</li>
                     </ul>
                 </div>
             </div>
@@ -713,6 +835,7 @@
         let currentSyntaxTree = null;
         let currentText = '';
         let currentSemanticAnalysis = null;
+        let messagesList = [];
         
         document.addEventListener('DOMContentLoaded', () => {
             loadSupportedFormats();
@@ -751,6 +874,308 @@
             }
         }
         
+        function addMessage(role, content, messageIndex = null, syntaxTree = null, isEdited = false) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const actualIndex = messageIndex !== null ? messageIndex : messagesList.length;
+            
+            let contentHtml = `<div class="message-content" data-message-index="${actualIndex}">${formatMessage(content)}`;
+            
+            if (isEdited) {
+                contentHtml += `<span class="message-edited-badge">(отредактировано)</span>`;
+            }
+            
+            contentHtml += `</div>`;
+            
+            contentHtml += `<div class="message-actions">`;
+            
+            if (role === 'user') {
+                contentHtml += `<button onclick="editMessage(${actualIndex})">Редактировать</button>`;
+                contentHtml += `<button onclick="deleteMessage(${actualIndex})">Удалить</button>`;
+            } else if (role === 'assistant') {
+                contentHtml += `<button onclick="regenerateResponse(${actualIndex})">Перегенерировать</button>`;
+                contentHtml += `<button onclick="editMessage(${actualIndex})">Редактировать</button>`;
+                contentHtml += `<button onclick="deleteMessage(${actualIndex})">Удалить</button>`;
+                if (syntaxTree) {
+                    contentHtml += `<button onclick="editSyntaxTree(${actualIndex})">Редактировать дерево</button>`;
+                }
+            }
+            
+            contentHtml += `</div>`;
+            
+            messageDiv.innerHTML = contentHtml;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            if (messageIndex === null) {
+                messagesList.push({
+                    role: role,
+                    content: content,
+                    syntaxTree: syntaxTree,
+                    element: messageDiv,
+                    index: messagesList.length,
+                    isEdited: isEdited
+                });
+            }
+            
+            return actualIndex;
+        }
+        
+        async function editMessage(messageIndex) {
+            const message = messagesList[messageIndex];
+            if (!message) return;
+            
+            const contentDiv = message.element.querySelector('.message-content');
+            const originalContent = message.content;
+            
+            const cleanContent = originalContent;
+            
+            const editor = document.createElement('textarea');
+            editor.className = 'message-content-editor';
+            editor.value = cleanContent;
+            editor.rows = 3;
+            
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.marginTop = '8px';
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.textContent = 'Сохранить';
+            saveBtn.style.marginRight = '8px';
+            saveBtn.style.padding = '4px 12px';
+            saveBtn.style.background = '#667eea';
+            saveBtn.style.color = 'white';
+            saveBtn.style.border = 'none';
+            saveBtn.style.borderRadius = '4px';
+            saveBtn.style.cursor = 'pointer';
+            saveBtn.onclick = async () => {
+                const newContent = editor.value.trim();
+                if (!newContent) return;
+                
+                try {
+                    const response = await fetch('/api/update_message', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            session_id: 'web_session',
+                            message_index: messageIndex,
+                            content: newContent
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        contentDiv.innerHTML = formatMessage(newContent) + '<span class="message-edited-badge">(отредактировано)</span>';
+                        message.content = newContent;
+                        message.isEdited = true;
+                        
+                        if (message.role === 'user' && messagesList[messageIndex + 1]?.role === 'assistant') {
+                            if (confirm('Сообщение изменено. Перегенерировать ответ ассистента?')) {
+                                await regenerateResponse(messageIndex + 1);
+                            }
+                        }
+                        
+                        await saveHistory();
+                    } else {
+                        alert('Ошибка сохранения: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('Ошибка: ' + error.message);
+                }
+            };
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Отмена';
+            cancelBtn.style.padding = '4px 12px';
+            cancelBtn.style.background = '#ccc';
+            cancelBtn.style.border = 'none';
+            cancelBtn.style.borderRadius = '4px';
+            cancelBtn.style.cursor = 'pointer';
+            cancelBtn.onclick = () => {
+                contentDiv.innerHTML = formatMessage(originalContent);
+                if (message.isEdited) {
+                    contentDiv.innerHTML += '<span class="message-edited-badge">(отредактировано)</span>';
+                }
+                contentDiv.classList.remove('editable');
+            };
+            
+            buttonContainer.appendChild(saveBtn);
+            buttonContainer.appendChild(cancelBtn);
+            
+            contentDiv.innerHTML = '';
+            contentDiv.appendChild(editor);
+            contentDiv.appendChild(buttonContainer);
+            contentDiv.classList.add('editable');
+            editor.focus();
+        }
+        
+        async function deleteMessage(messageIndex) {
+            if (!confirm('Удалить это сообщение?')) return;
+            
+            try {
+                const response = await fetch('/api/delete_message', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: 'web_session',
+                        message_index: messageIndex
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const message = messagesList[messageIndex];
+                    if (message && message.element) {
+                        message.element.remove();
+                    }
+                    
+                    messagesList.splice(messageIndex, 1);
+                    messagesList.forEach((msg, idx) => {
+                        msg.index = idx;
+                        const contentDiv = msg.element.querySelector('.message-content');
+                        if (contentDiv) {
+                            contentDiv.setAttribute('data-message-index', idx);
+                        }
+                        const actions = msg.element.querySelector('.message-actions');
+                        if (actions) {
+                            actions.innerHTML = '';
+                            if (msg.role === 'user') {
+                                actions.innerHTML += `<button onclick="editMessage(${idx})">Редактировать</button>`;
+                                actions.innerHTML += `<button onclick="deleteMessage(${idx})">Удалить</button>`;
+                            } else if (msg.role === 'assistant') {
+                                actions.innerHTML += `<button onclick="regenerateResponse(${idx})">Перегенерировать</button>`;
+                                actions.innerHTML += `<button onclick="editMessage(${idx})">Редактировать</button>`;
+                                actions.innerHTML += `<button onclick="deleteMessage(${idx})">Удалить</button>`;
+                                if (msg.syntaxTree) {
+                                    actions.innerHTML += `<button onclick="editSyntaxTree(${idx})">Редактировать дерево</button>`;
+                                }
+                            }
+                        }
+                    });
+                    
+                    await saveHistory();
+                } else {
+                    alert('Ошибка удаления: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+        
+        async function regenerateResponse(messageIndex) {
+            if (!confirm('Перегенерировать ответ?')) return;
+            
+            const message = messagesList[messageIndex];
+            if (!message || message.role !== 'assistant') {
+                alert('Можно перегенерировать только ответ ассистента');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/regenerate_response', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: 'web_session',
+                        message_index: messageIndex
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    if (message && message.element) {
+                        const contentDiv = message.element.querySelector('.message-content');
+                        contentDiv.innerHTML = formatMessage(data.new_content) + '<span class="message-edited-badge">(перегенерировано)</span>';
+                        message.content = data.new_content;
+                        message.syntaxTree = data.syntax_tree;
+                        
+                        if (data.syntax_tree) {
+                            currentSyntaxTree = data.syntax_tree;
+                            renderSyntaxTree(data.syntax_tree);
+                        }
+                        
+                        await saveHistory();
+                    }
+                } else {
+                    alert('Ошибка: ' + data.error);
+                }
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        }
+        
+        function editSyntaxTree(messageIndex) {
+            const message = messagesList[messageIndex];
+            if (!message || !message.syntaxTree) return;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            
+            const editor = document.createElement('div');
+            editor.className = 'syntax-tree-editor';
+            editor.innerHTML = `
+                <h3 style="margin-bottom: 12px;">Редактирование синтаксического дерева</h3>
+                <textarea id="tree-editor-textarea">${JSON.stringify(message.syntaxTree, null, 2)}</textarea>
+                <div style="margin-top: 12px;">
+                    <button id="save-tree-btn" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить</button>
+                    <button id="cancel-tree-btn" style="padding: 8px 16px; margin-left: 8px; background: #ccc; border: none; border-radius: 6px; cursor: pointer;">Отмена</button>
+                </div>
+                <div style="margin-top: 12px; font-size: 12px; color: #666;">
+                    <strong>Формат JSON:</strong><br>
+                    {
+                        "word": "главное_слово",
+                        "role": "сказуемое",
+                        "children": [
+                            {"word": "зависимое", "role": "подлежащее", "children": []}
+                        ]
+                    }
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(editor);
+            
+            const textarea = editor.querySelector('#tree-editor-textarea');
+            
+            editor.querySelector('#save-tree-btn').onclick = async () => {
+                try {
+                    const updatedTree = JSON.parse(textarea.value);
+                    
+                    const response = await fetch('/api/update_syntax_tree', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            session_id: 'web_session',
+                            message_index: messageIndex,
+                            syntax_tree: updatedTree
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        message.syntaxTree = updatedTree;
+                        currentSyntaxTree = updatedTree;
+                        renderSyntaxTree(updatedTree);
+                        alert('Синтаксическое дерево обновлено');
+                        editor.remove();
+                        overlay.remove();
+                        
+                        await saveHistory();
+                    } else {
+                        alert('Ошибка: ' + data.error);
+                    }
+                } catch (e) {
+                    alert('Ошибка парсинга JSON: ' + e.message);
+                }
+            };
+            
+            editor.querySelector('#cancel-tree-btn').onclick = () => {
+                editor.remove();
+                overlay.remove();
+            };
+        }
+        
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -783,7 +1208,7 @@
                 const chatData = await chatResponse.json();
                 
                 removeLoadingMessage(loadingId);
-                addMessage('assistant', chatData.response);
+                const assistantIndex = addMessage('assistant', chatData.response, null, chatData.syntax_tree);
                 
                 if (chatData.sources && chatData.sources.length > 0) {
                     addSources(chatData.sources);
@@ -809,6 +1234,8 @@
                     currentSemanticAnalysis = semanticData.analysis;
                     renderSemanticAnalysis(semanticData.analysis);
                 }
+                
+                await saveHistory();
                 
             } catch (error) {
                 console.error('Error:', error);
@@ -1050,21 +1477,18 @@
         }
         
         async function saveHistory() {
-            const messages = document.querySelectorAll('#messages .message');
             const history = [];
-            
-            messages.forEach(msg => {
-                const role = msg.classList.contains('user') ? 'user' : 'assistant';
-                const content = msg.querySelector('.message-content').innerText;
+            for (const msg of messagesList) {
                 history.push({
-                    role: role,
-                    content: content,
-                    timestamp: new Date().toISOString()
+                    role: msg.role,
+                    content: msg.content,
+                    timestamp: new Date().toISOString(),
+                    syntax_tree: msg.syntaxTree,
+                    edited: msg.isEdited || false
                 });
-            });
+            }
             
             if (history.length === 0) {
-                showStatus('uploadStatus', 'Нет сообщений для сохранения', 'error');
                 return;
             }
             
@@ -1076,13 +1500,11 @@
                 });
                 
                 const data = await response.json();
-                if (data.success) {
-                    showStatus('uploadStatus', `История сохранена (${history.length} сообщений)`, 'success');
-                } else {
-                    showStatus('uploadStatus', `Ошибка: ${data.error}`, 'error');
+                if (!data.success) {
+                    console.error('Failed to save history:', data.error);
                 }
             } catch (error) {
-                showStatus('uploadStatus', `Ошибка: ${error.message}`, 'error');
+                console.error('Error saving history:', error);
             }
         }
 
@@ -1094,9 +1516,12 @@
                 if (data.success && data.history && data.history.length > 0) {
                     const messagesDiv = document.getElementById('messages');
                     messagesDiv.innerHTML = '';
+                    messagesList = [];
                     
-                    data.history.forEach(msg => {
-                        addMessage(msg.role, msg.content);
+                    data.history.forEach((msg, idx) => {
+                        const syntaxTree = msg.syntax_tree || null;
+                        const isEdited = msg.edited || false;
+                        addMessage(msg.role, msg.content, idx, syntaxTree, isEdited);
                     });
                     
                     showStatus('uploadStatus', `Загружено ${data.history.length} сообщений`, 'success');
@@ -1113,6 +1538,7 @@
                 try {
                     await fetch('/api/history/web_session', {method: 'DELETE'});
                     document.getElementById('messages').innerHTML = '';
+                    messagesList = [];
                     addMessage('assistant', 'История диалога очищена.');
                     showStatus('uploadStatus', 'История очищена', 'success');
                 } catch (error) {
@@ -1251,15 +1677,6 @@
                     element.innerHTML = '';
                 }
             }, 5000);
-        }
-        
-        function addMessage(role, content) {
-            const messagesDiv = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}`;
-            messageDiv.innerHTML = `<div class="message-content">${formatMessage(content)}</div>`;
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
         
         function formatMessage(content) {
