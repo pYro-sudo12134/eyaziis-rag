@@ -1,0 +1,5 @@
+*/__pycache__
+*/static
+localstack-data
+data
+*.env

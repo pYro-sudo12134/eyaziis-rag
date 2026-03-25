@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9201:9200"
+      - "9601:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kibana:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    ports:
+      - "5601:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks:
+      - rag-network
+
+  ollama:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_ORIGINS=http://localhost:5000/*
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    networks:
+      - rag-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  localstack:
+    image: localstack/localstack:4.12
+    environment:
+      - PERSISTENCE=1
+      - SERVICES=s3
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - DATA_DIR=/var/lib/localstack/data
+      - TMPDIR=/var/lib/localstack/tmp
+    ports:
+      - "4566:4566"
+      - "4572:4572"
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+      - ./localstack-init:/docker-entrypoint-initaws.d
+    networks:
+      - rag-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    image: pyrodocker1/eyaziis-nlp-rag:1.0
+    ports:
+      - "5001:5000"
+    environment:
+      - CORS_ORIGINS=*
+      - CORS_METHODS=*
+      - PYTHONPATH=/app
+      - FLASK_APP=app.app
+      - FLASK_ENV=development
+      - OPENSEARCH_HOST=${OPENSEARCH_HOST:-opensearch}
+      - OPENSEARCH_PORT=${OPENSEARCH_PORT:-9200}
+      - OPENSEARCH_INDEX=${OPENSEARCH_INDEX:-rag_documents}
+      - OLLAMA_HOST=${OLLAMA_HOST:-ollama}
+      - OLLAMA_PORT=${OLLAMA_PORT:-11434}
+      - LLM_MODEL=${LLM_MODEL:-qwen2.5:7b}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-nomic-embed-text}
+      - TOP_K=${TOP_K:-5}
+      - CHUNK_SIZE=${CHUNK_SIZE:-512}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-test}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-test}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL:-http://localstack:4566}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-rag-documents}
+      - S3_RESULTS_PREFIX=${S3_RESULTS_PREFIX:-results/}
+      - S3_UPLOADS_PREFIX=${S3_UPLOADS_PREFIX:-uploads/}
+    volumes:
+      - ./data:/data
+      - ./app/templates:/app/templates
+      - ./app/static:/app/static
+    networks:
+      - rag-network
+    command: flask run --host=0.0.0.0 --port=5000 --debug
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+
+volumes:
+  opensearch-data:
+  ollama-models:
+
+networks:
+  rag-network:
+    driver: bridge
