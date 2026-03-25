@@ -191,6 +191,9 @@
             background: white;
             border-bottom: 1px solid #e0e0e0;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .semantic-header {
@@ -228,7 +231,7 @@
         .sidebar-section {
             margin-bottom: 25px;
             padding-bottom: 20px;
-            border-bottom: 1px solid white;
+            border-bottom: 1px solid #eee;
         }
         
         .sidebar-section h3 {
@@ -265,19 +268,15 @@
         }
         
         button.sidebar-btn:hover {
-            background: #764ba2;
+            background: #5a3a7a;
         }
         
         button.sidebar-btn.secondary {
-            background: #764ba2;
+            background: #667eea;
         }
         
         button.sidebar-btn.secondary:hover {
-            background: #764ba2;
-        }
-        
-        button.sidebar-btn.danger:hover {
-            background: #764ba2;
+            background: #5a67d8;
         }
         
         .file-input {
@@ -300,7 +299,7 @@
         
         .status-message.error {
             background: #ffebee;
-            color: #764ba2;
+            color: #c62828;
         }
         
         .examples-list {
@@ -311,7 +310,7 @@
         .examples-list li {
             padding: 6px 10px;
             margin: 4px 0;
-            background: #e0e7ff;
+            background: #f0f0f0;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
@@ -331,12 +330,13 @@
         .result-item {
             padding: 8px;
             margin: 5px 0;
-            background: white;
+            background: #f8f9fa;
             border-radius: 6px;
             cursor: pointer;
             font-size: 12px;
             word-break: break-word;
             overflow-wrap: break-word;
+            border: 1px solid #eee;
         }
         
         .result-item:hover {
@@ -361,7 +361,7 @@
             color: #666;
             margin-top: 8px;
             padding: 8px;
-            background: white;
+            background: #f8f9fa;
             border-radius: 6px;
             max-height: 100px;
             overflow-y: auto;
@@ -377,6 +377,142 @@
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
+        }
+
+        /* Tab styles */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: white;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .tab-btn:hover:not(.active) {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .help-section {
+            margin-bottom: 24px;
+        }
+        
+        .help-section h4 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .help-section p, .help-section li {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .help-section ul, .help-section ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .help-section li {
+            margin: 6px 0;
+        }
+        
+        .command-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        
+        .command-item {
+            display: flex;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        
+        .command-name {
+            width: 100px;
+            font-weight: 600;
+            color: #667eea;
+            font-family: monospace;
+        }
+        
+        .command-desc {
+            flex: 1;
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .shortcut-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .shortcut-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        
+        .shortcut-key {
+            font-family: monospace;
+            font-weight: 600;
+            color: #764ba2;
+        }
+        
+        .faq-item {
+            margin-bottom: 16px;
+        }
+        
+        .faq-question {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        
+        .faq-answer {
+            font-size: 13px;
+            color: #666;
+            padding-left: 12px;
+            border-left: 2px solid #667eea;
+        }
+        
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
         }
     </style>
 </head>
@@ -405,7 +541,7 @@
         <div class="syntax-area" style="flex: 1;">
             <div class="syntax-header">
                 Синтаксическое дерево
-                <button onclick="saveSyntaxTree()" style="float: right; padding: 4px 12px; font-size: 12px; background: #764ba2; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить синтаксический анализ</button>
+                <button onclick="saveSyntaxTree()" style="padding: 4px 12px; font-size: 12px; background: #764ba2; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить</button>
             </div>
             <div class="syntax-tree-container" id="syntaxTree">
                 <div class="loading">Отправьте сообщение, чтобы увидеть синтаксическое дерево</div>
@@ -415,7 +551,7 @@
         <div class="semantic-area" style="flex: 1; background: #f8f9fa; display: flex; flex-direction: column; overflow: hidden;">
             <div class="syntax-header">
                 Семантические роли
-                <button onclick="saveSemanticAnalysis()" style="float: right; padding: 4px 12px; font-size: 12px; background: #764ba2; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить семантический анализ</button>
+                <button onclick="saveSemanticAnalysis()" style="padding: 4px 12px; font-size: 12px; background: #764ba2; color: white; border: none; border-radius: 6px; cursor: pointer;">Сохранить</button>
             </div>
             <div class="syntax-tree-container" id="semanticAnalysis" style="background: #f8f9fa;">
                 <div class="loading">Отправьте сообщение, чтобы увидеть семантический анализ</div>
@@ -423,52 +559,151 @@
         </div>
         
         <div class="sidebar">
-            <div class="sidebar-section">
-                <h3>Загрузка документа</h3>
-                <input type="file" id="fileInput" class="file-input" accept=".txt,.pdf,.docx,.doc,.html,.htm,.rtf">
-                <button class="sidebar-btn" onclick="uploadDocument()">Загрузить и индексировать</button>
-                <div id="uploadStatus"></div>
-                <div id="uploadPreview" class="upload-preview" style="display: none;"></div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('main')">Основное</button>
+                <button class="tab-btn" onclick="switchTab('help')">Помощь</button>
             </div>
             
-            <div class="sidebar-section">
-                <h3>Предметная область</h3>
-                <select id="domainSelect" onchange="changeDomain()">
-                    <option value="cinema">Кинематограф</option>
-                    <option value="animals">Животные</option>
-                </select>
-                <div id="domainDescription" style="font-size: 12px; color: #666; margin-top: 8px;"></div>
-                <h4>Примеры вопросов:</h4>
-                <ul class="examples-list" id="examplesList">
-                    <li>Загрузка...</li>
-                </ul>
-            </div>
-            
-            <div class="sidebar-section">
-                <h3>История диалога</h3>
-                <button class="sidebar-btn secondary" onclick="saveHistory()">Сохранить историю</button>
-                <button class="sidebar-btn secondary" onclick="clearHistory()">Очистить историю</button>
-                <button class="sidebar-btn secondary" onclick="loadHistory()">Загрузить историю</button>
-            </div>
-            
-            <div class="sidebar-section">
-                <h3>Сохраненные результаты</h3>
-                <button class="sidebar-btn" onclick="loadResultsList()">Обновить список</button>
-                <div id="resultsList" class="results-list" style="margin-top: 10px;">
-                    <div class="loading">Загрузите список...</div>
+            <div id="tab-main" class="tab-content active" style="display: block; padding: 16px 0 0 0;">
+                <div class="sidebar-section">
+                    <h3>Загрузка документа</h3>
+                    <input type="file" id="fileInput" class="file-input" accept=".txt,.pdf,.docx,.doc,.html,.htm,.rtf">
+                    <button class="sidebar-btn" onclick="uploadDocument()">Загрузить и индексировать</button>
+                    <div id="uploadStatus"></div>
+                    <div id="uploadPreview" class="upload-preview" style="display: none;"></div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Предметная область</h3>
+                    <select id="domainSelect" onchange="changeDomain()">
+                        <option value="cinema">Кинематограф</option>
+                        <option value="animals">Животные</option>
+                    </select>
+                    <div id="domainDescription" style="font-size: 12px; color: #666; margin-top: 8px;"></div>
+                    <h4>Примеры вопросов:</h4>
+                    <ul class="examples-list" id="examplesList">
+                        <li>Загрузка...</li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>История диалога</h3>
+                    <button class="sidebar-btn secondary" onclick="saveHistory()">Сохранить историю</button>
+                    <button class="sidebar-btn secondary" onclick="clearHistory()">Очистить историю</button>
+                    <button class="sidebar-btn secondary" onclick="loadHistory()">Загрузить историю</button>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Сохраненные результаты</h3>
+                    <button class="sidebar-btn secondary" onclick="loadResultsList()">Обновить список</button>
+                    <div id="resultsList" class="results-list" style="margin-top: 10px;">
+                        <div class="loading">Загрузите список...</div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Статистика</h3>
+                    <button class="sidebar-btn secondary" onclick="loadStats()">Обновить статистику</button>
+                    <div id="statsInfo" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Поддерживаемые форматы</h3>
+                    <div id="supportedFormats" style="font-size: 12px; color: #666;">
+                        Загрузка...
+                    </div>
                 </div>
             </div>
             
-            <div class="sidebar-section">
-                <h3>Статистика</h3>
-                <button class="sidebar-btn" onclick="loadStats()">Обновить статистику</button>
-                <div id="statsInfo" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
-            </div>
-            
-            <div class="sidebar-section">
-                <h3>Поддерживаемые форматы</h3>
-                <div id="supportedFormats" style="font-size: 12px; color: #666;">
-                    Загрузка...
+            <div id="tab-help" class="tab-content" style="padding: 16px 0 0 0;">
+                <div class="help-section">
+                    <h4>О системе</h4>
+                    <p>RAG Agent - интеллектуальная система анализа текста с использованием Retrieval-Augmented Generation (RAG). Система сочетает семантический поиск по загруженным документам с генерацией ответов на основе LLM.</p>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Возможности</h4>
+                    <ul>
+                        <li><strong>Загрузка документов</strong> - поддерживаются TXT, PDF, DOCX, DOC, HTML, RTF форматы</li>
+                        <li><strong>Синтаксический анализ</strong> - построение дерева зависимостей предложения</li>
+                        <li><strong>Семантический анализ</strong> - выделение семантических ролей (агент, пациенс, инструмент, локация)</li>
+                        <li><strong>Семантические отношения</strong> - выявление гиперонимов, гипонимов, синонимов, причинно-следственных связей</li>
+                        <li><strong>Сохранение результатов</strong> - экспорт анализа в S3 хранилище</li>
+                        <li><strong>Предметные области</strong> - настройка контекста для более точных ответов</li>
+                    </ul>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Команды</h4>
+                    <div class="command-list">
+                        <div class="command-item">
+                            <span class="command-name">/help</span>
+                            <span class="command-desc">Показать справку</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">/syntax [текст]</span>
+                            <span class="command-desc">Построить синтаксическое дерево для текста</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">/semantic [текст]</span>
+                            <span class="command-desc">Выполнить семантический анализ</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">/save</span>
+                            <span class="command-desc">Сохранить текущий анализ</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">/stats</span>
+                            <span class="command-desc">Показать статистику системы</span>
+                        </div>
+                        <div class="command-item">
+                            <span class="command-name">/clear</span>
+                            <span class="command-desc">Очистить историю диалога</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Горячие клавиши</h4>
+                    <div class="shortcut-grid">
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Enter</span> - отправить сообщение
+                        </div>
+                        <div class="shortcut-item">
+                            <span class="shortcut-key">Ctrl+Enter</span> - новая строка
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>Часто задаваемые вопросы</h4>
+                    <div class="faq-item">
+                        <div class="faq-question">Какие форматы документов поддерживаются?</div>
+                        <div class="faq-answer">Поддерживаются TXT, PDF, DOCX, DOC, HTML, RTF. Максимальный размер файла - 50 МБ.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Как сохранить результаты анализа?</div>
+                        <div class="faq-answer">Нажмите кнопку "Сохранить" в блоке синтаксического или семантического анализа. Результаты сохраняются в S3 хранилище и доступны в разделе "Сохраненные результаты".</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Что такое семантические роли?</div>
+                        <div class="faq-answer">Семантические роли описывают функции слов в предложении: Агент (кто выполняет действие), Пациенс (на кого направлено действие), Инструмент (чем выполняется), Локация (где), Время (когда) и другие.</div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">Как изменить предметную область?</div>
+                        <div class="faq-answer">Выберите область из выпадающего списка в правой панели. Это поможет системе лучше понимать контекст ваших вопросов.</div>
+                    </div>
+                </div>
+                
+                <div class="help-section">
+                    <h4>API Endpoints</h4>
+                    <ul>
+                        <li><code>POST /api/chat</code> - основной чат с RAG</li>
+                        <li><code>POST /api/upload</code> - загрузка документа</li>
+                        <li><code>POST /api/semantic_analysis</code> - полный семантико-синтаксический анализ</li>
+                        <li><code>GET /api/stats</code> - статистика системы</li>
+                        <li><code>POST /api/save_result</code> - сохранение результатов</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -477,6 +712,7 @@
     <script>
         let currentSyntaxTree = null;
         let currentText = '';
+        let currentSemanticAnalysis = null;
         
         document.addEventListener('DOMContentLoaded', () => {
             loadSupportedFormats();
@@ -486,8 +722,31 @@
             document.getElementById('fileInput').addEventListener('change', previewFile);
         });
         
+        function switchTab(tabName) {
+            const mainTab = document.getElementById('tab-main');
+            const helpTab = document.getElementById('tab-help');
+            const buttons = document.querySelectorAll('.tab-btn');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (tabName === 'main') {
+                mainTab.classList.add('active');
+                mainTab.style.display = 'block';
+                helpTab.classList.remove('active');
+                helpTab.style.display = 'none';
+                document.querySelector('.tabs .tab-btn:first-child').classList.add('active');
+            } else {
+                helpTab.classList.add('active');
+                helpTab.style.display = 'block';
+                mainTab.classList.remove('active');
+                mainTab.style.display = 'none';
+                document.querySelector('.tabs .tab-btn:last-child').classList.add('active');
+            }
+        }
+        
         function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.ctrlKey) {
+                event.preventDefault();
                 sendMessage();
             }
         }
@@ -498,6 +757,12 @@
             
             if (!message) return;
             
+            if (message.startsWith('/')) {
+                handleCommand(message);
+                input.value = '';
+                return;
+            }
+            
             currentText = message;
             addMessage('user', message);
             input.value = '';
@@ -505,11 +770,9 @@
             const loadingId = addLoadingMessage();
             
             try {
-                const response = await fetch('/api/chat', {
+                const chatResponse = await fetch('/api/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         message: message,
                         include_syntax: true,
@@ -517,29 +780,144 @@
                     })
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
+                const chatData = await chatResponse.json();
                 
                 removeLoadingMessage(loadingId);
+                addMessage('assistant', chatData.response);
                 
-                addMessage('assistant', data.response);
-                
-                if (data.sources && data.sources.length > 0) {
-                    addSources(data.sources);
+                if (chatData.sources && chatData.sources.length > 0) {
+                    addSources(chatData.sources);
                 }
                 
-                if (data.syntax_tree) {
-                    currentSyntaxTree = data.syntax_tree;
-                    renderSyntaxTree(data.syntax_tree);
+                if (chatData.syntax_tree) {
+                    currentSyntaxTree = chatData.syntax_tree;
+                    renderSyntaxTree(chatData.syntax_tree);
+                }
+                
+                const semanticResponse = await fetch('/api/semantic_analysis', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        text: message,
+                        include_syntax: true
+                    })
+                });
+                
+                const semanticData = await semanticResponse.json();
+                
+                if (semanticData.success && semanticData.analysis) {
+                    currentSemanticAnalysis = semanticData.analysis;
+                    renderSemanticAnalysis(semanticData.analysis);
                 }
                 
             } catch (error) {
                 console.error('Error:', error);
                 removeLoadingMessage(loadingId);
                 addMessage('assistant', 'Извините, произошла ошибка. Попробуйте позже.');
+            }
+        }
+        
+        function handleCommand(command) {
+            const cmd = command.toLowerCase().trim();
+            
+            if (cmd === '/help') {
+                addMessage('assistant', 'Доступные команды:\n\n' +
+                    '/help - показать справку\n' +
+                    '/syntax [текст] - построить синтаксическое дерево\n' +
+                    '/semantic [текст] - выполнить семантический анализ\n' +
+                    '/save - сохранить текущий анализ\n' +
+                    '/stats - показать статистику\n' +
+                    '/clear - очистить историю');
+                return;
+            }
+            
+            if (cmd === '/stats') {
+                loadStats();
+                return;
+            }
+            
+            if (cmd === '/clear') {
+                clearHistory();
+                return;
+            }
+            
+            if (cmd === '/save') {
+                if (currentSyntaxTree) {
+                    saveSyntaxTree();
+                } else if (currentSemanticAnalysis) {
+                    saveSemanticAnalysis();
+                } else {
+                    addMessage('assistant', 'Нет данных для сохранения. Сначала отправьте сообщение для анализа.');
+                }
+                return;
+            }
+            
+            if (cmd.startsWith('/syntax ')) {
+                const text = cmd.substring(7).trim();
+                if (text) {
+                    analyzeSyntaxOnly(text);
+                } else {
+                    addMessage('assistant', 'Укажите текст для анализа. Пример: /syntax Кошка ловит мышь');
+                }
+                return;
+            }
+            
+            if (cmd.startsWith('/semantic ')) {
+                const text = cmd.substring(9).trim();
+                if (text) {
+                    analyzeSemanticOnly(text);
+                } else {
+                    addMessage('assistant', 'Укажите текст для анализа. Пример: /semantic Кошка ловит мышь');
+                }
+                return;
+            }
+            
+            addMessage('assistant', 'Неизвестная команда. Введите /help для списка команд.');
+        }
+        
+        async function analyzeSyntaxOnly(text) {
+            const loadingId = addLoadingMessage();
+            try {
+                const response = await fetch('/api/syntax', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text})
+                });
+                const data = await response.json();
+                removeLoadingMessage(loadingId);
+                
+                currentText = text;
+                currentSyntaxTree = data;
+                renderSyntaxTree(data);
+                addMessage('assistant', `Синтаксический анализ текста: "${text}"`);
+            } catch (error) {
+                removeLoadingMessage(loadingId);
+                addMessage('assistant', `Ошибка: ${error.message}`);
+            }
+        }
+        
+        async function analyzeSemanticOnly(text) {
+            const loadingId = addLoadingMessage();
+            try {
+                const response = await fetch('/api/semantic_analysis', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text: text})
+                });
+                const data = await response.json();
+                removeLoadingMessage(loadingId);
+                
+                if (data.success && data.analysis) {
+                    currentText = text;
+                    currentSemanticAnalysis = data.analysis;
+                    renderSemanticAnalysis(data.analysis);
+                    addMessage('assistant', `Семантический анализ текста: "${text}"`);
+                } else {
+                    addMessage('assistant', 'Не удалось выполнить семантический анализ');
+                }
+            } catch (error) {
+                removeLoadingMessage(loadingId);
+                addMessage('assistant', `Ошибка: ${error.message}`);
             }
         }
         
@@ -555,7 +933,7 @@
             formData.append('file', file);
             
             const statusDiv = document.getElementById('uploadStatus');
-            showStatus('uploadStatus', '⏳ Загрузка и индексация документа...', 'info');
+            showStatus('uploadStatus', 'Загрузка и индексация документа...', 'info');
             
             const progressDiv = document.createElement('div');
             progressDiv.className = 'progress-bar';
@@ -572,8 +950,8 @@
                 
                 if (data.success) {
                     showStatus('uploadStatus', `
-                        Документ успешно загружен!<br>
-                        Статистика: ${data.statistics.word_count} слов, ${data.statistics.char_count} символов<br>
+                        Документ успешно загружен!
+                        Статистика: ${data.statistics.word_count} слов, ${data.statistics.char_count} символов
                         Разбит на ${data.chunks} фрагментов
                     `, 'success');
                     
@@ -607,10 +985,8 @@
             `;
         }
         
-        async function changeDomain()
-        {
+        async function changeDomain() {
             const domain = document.getElementById('domainSelect').value;
-            document.getElementById('uploadStatus');
 
             try {
                 const response = await fetch('/api/domain', {
@@ -638,7 +1014,6 @@
                 console.error('Error changing domain:', error);
             }
         }
-
         
         async function loadDomain() {
             try {
@@ -666,7 +1041,7 @@
                 return;
             }
             
-            list.innerHTML = examples.map(ex => `<li onclick="setExample('${escapeHtml(ex).replace(/'/g, "\\'")}')">💡 ${escapeHtml(ex)}</li>`).join('');
+            list.innerHTML = examples.map(ex => `<li onclick="setExample('${escapeHtml(ex).replace(/'/g, "\\'")}')">${escapeHtml(ex)}</li>`).join('');
         }
         
         function setExample(text) {
@@ -737,10 +1112,9 @@
             if (confirm('Очистить историю диалога?')) {
                 try {
                     await fetch('/api/history/web_session', {method: 'DELETE'});
+                    document.getElementById('messages').innerHTML = '';
+                    addMessage('assistant', 'История диалога очищена.');
                     showStatus('uploadStatus', 'История очищена', 'success');
-                    setTimeout(() => {
-                        document.getElementById('uploadStatus').innerHTML = '';
-                    }, 2000);
                 } catch (error) {
                     showStatus('uploadStatus', `Ошибка: ${error.message}`, 'error');
                 }
@@ -897,7 +1271,7 @@
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'message assistant loading-message';
             loadingDiv.id = 'loading-' + Date.now();
-            loadingDiv.innerHTML = '<div class="message-content">🤔 Думаю...</div>';
+            loadingDiv.innerHTML = '<div class="message-content">Думаю...</div>';
             messagesDiv.appendChild(loadingDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
             return loadingDiv.id;
@@ -982,68 +1356,6 @@
             return div.innerHTML;
         }
         
-        let currentSemanticAnalysis = null;
-
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            currentText = message;
-            addMessage('user', message);
-            input.value = '';
-            
-            const loadingId = addLoadingMessage();
-            
-            try {
-                const chatResponse = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        message: message,
-                        include_syntax: true,
-                        session_id: 'web_session'
-                    })
-                });
-                
-                const chatData = await chatResponse.json();
-                
-                removeLoadingMessage(loadingId);
-                addMessage('assistant', chatData.response);
-                
-                if (chatData.sources && chatData.sources.length > 0) {
-                    addSources(chatData.sources);
-                }
-                
-                if (chatData.syntax_tree) {
-                    currentSyntaxTree = chatData.syntax_tree;
-                    renderSyntaxTree(chatData.syntax_tree);
-                }
-                
-                const semanticResponse = await fetch('/api/semantic_analysis', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        text: message,
-                        include_syntax: true
-                    })
-                });
-                
-                const semanticData = await semanticResponse.json();
-                
-                if (semanticData.success && semanticData.analysis) {
-                    currentSemanticAnalysis = semanticData.analysis;
-                    renderSemanticAnalysis(semanticData.analysis);
-                }
-                
-            } catch (error) {
-                console.error('Error:', error);
-                removeLoadingMessage(loadingId);
-                addMessage('assistant', 'Извините, произошла ошибка. Попробуйте позже.');
-            }
-        }
-
         function renderSemanticAnalysis(analysis) {
             const container = document.getElementById('semanticAnalysis');
             if (!container) return;
@@ -1058,7 +1370,7 @@
             if (analysis.semantic_roles && analysis.semantic_roles.length > 0) {
                 const rolesSection = document.createElement('div');
                 rolesSection.className = 'semantic-section';
-                rolesSection.innerHTML = '<h4 style="margin: 10px 0 5px 0; color: #764ba2;">📌 Семантические роли</h4>';
+                rolesSection.innerHTML = '<h4 style="margin: 10px 0 5px 0; color: #764ba2;">Семантические роли</h4>';
                 
                 analysis.semantic_roles.forEach((role, idx) => {
                     const roleDiv = document.createElement('div');
@@ -1084,7 +1396,7 @@
             if (analysis.semantic_relations && analysis.semantic_relations.length > 0) {
                 const relationsSection = document.createElement('div');
                 relationsSection.className = 'semantic-section';
-                relationsSection.innerHTML = '<h4 style="margin: 15px 0 5px 0; color: #764ba2;">🔗 Семантические отношения</h4>';
+                relationsSection.innerHTML = '<h4 style="margin: 15px 0 5px 0; color: #764ba2;">Семантические отношения</h4>';
                 
                 analysis.semantic_relations.forEach(rel => {
                     const relDiv = document.createElement('div');
@@ -1111,7 +1423,7 @@
             if (analysis.summary) {
                 const summarySection = document.createElement('div');
                 summarySection.className = 'semantic-section';
-                summarySection.innerHTML = '<h4 style="margin: 15px 0 5px 0; color: #764ba2;">📊 Сводка</h4>';
+                summarySection.innerHTML = '<h4 style="margin: 15px 0 5px 0; color: #764ba2;">Сводка</h4>';
                 
                 const summaryDiv = document.createElement('div');
                 summaryDiv.style.cssText = 'background: white; padding: 10px; border-radius: 8px; font-size: 13px;';
@@ -1130,7 +1442,7 @@
                 container.innerHTML = '<div class="loading">Нет данных для семантического анализа</div>';
             }
         }
-
+        
         async function saveSemanticAnalysis() {
             if (!currentSemanticAnalysis) {
                 alert('Нет данных для сохранения. Сначала отправьте сообщение.');
