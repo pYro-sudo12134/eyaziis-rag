@@ -1,5 +1,7 @@
 #!/bin/bash
 
+sleep 5
+
 awslocal s3 mb s3://rag-documents
 
 awslocal s3api put-bucket-cors --bucket rag-documents --cors-configuration '{

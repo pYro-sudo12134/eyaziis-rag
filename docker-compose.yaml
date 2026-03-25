@@ -51,7 +51,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.kibana.rule=Host(`kibana.rag.local`)"
       - "traefik.http.services.kibana.loadbalancer.server.port=5601"
-      - "traefik.http.routers.kibana.middlewares=internal-whitelist@docker"
 
   ollama:
     image: ollama/ollama:latest
