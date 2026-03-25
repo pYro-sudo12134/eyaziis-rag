@@ -1,0 +1,87 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yaml
+.docker/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Data (не копируем в образ)
+data/
+localstack-data/
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Models (скачиваются при запуске)
+*.gguf
+*.bin
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Local development
+.vscode/
+.idea/
+*.iml
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Coverage reports
+.coverage
+.coverage.*
+htmlcov/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytype
+.pytype/
+
+# Profiling data
+*.prof
