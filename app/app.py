@@ -1,5 +1,6 @@
 import os
 import traceback
+import base64
 import json
 import tempfile
 from datetime import datetime
@@ -31,13 +32,8 @@ def index():
     """Главная страница"""
     return render_template('index.html')
 
-
 @app.route('/api/upload', methods=['POST', 'OPTIONS'])
 def upload_document():
-    """
-    Загрузка документа для анализа в S3
-    Поддерживает: TXT, PDF, DOCX, DOC, HTML, RTF
-    """
     if request.method == 'OPTIONS':
         return '', 200
     
@@ -49,13 +45,18 @@ def upload_document():
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
         
-        filename = secure_filename(file.filename)
-        ext = os.path.splitext(filename)[1].lower()
+        original_filename = file.filename
+        
+        ext = os.path.splitext(original_filename)[1].lower()
         
         if ext not in ALLOWED_EXTENSIONS:
             return jsonify({
                 'error': f'File type not allowed. Supported: {", ".join(ALLOWED_EXTENSIONS)}'
             }), 400
+        
+        safe_filename = secure_filename(original_filename)
+        if not safe_filename or safe_filename.replace('_', '') == '':
+            safe_filename = f"file_{datetime.now().strftime('%Y%m%d_%H%M%S')}{ext}"
         
         metadata = request.form.get('metadata')
         if metadata:
@@ -67,15 +68,15 @@ def upload_document():
             metadata = {}
         
         metadata['upload_time'] = datetime.now().isoformat()
-        metadata['original_filename'] = file.filename
+        metadata['original_filename'] = base64.b64encode(original_filename.encode('utf-8')).decode('ascii')
         metadata['content_type'] = file.content_type or 'application/octet-stream'
         
-        upload_result = s3_storage.save_upload(file, filename, metadata)
+        upload_result = s3_storage.save_upload(file, safe_filename, metadata)
         
         if not upload_result['success']:
             return jsonify({'error': upload_result['error']}), 500
         
-        file_content = s3_storage.get_upload(filename)
+        file_content = s3_storage.get_upload(safe_filename)
         if not file_content:
             return jsonify({'error': 'Failed to read uploaded file from S3'}), 500
         
@@ -89,14 +90,16 @@ def upload_document():
             if not result['success']:
                 return jsonify({
                     'error': result['error'],
-                    'file': filename
+                    'file': original_filename
                 }), 400
             
             index_result = agent.add_document(
                 text=result['text'],
                 metadata={
                     **result['metadata'],
-                    'source_file': filename,
+                    'source_file': original_filename,
+                    'source_file_encoded': base64.b64encode(original_filename.encode('utf-8')).decode('ascii'),
+                    'safe_filename': safe_filename,
                     's3_key': upload_result['key'],
                     'upload_time': datetime.now().isoformat()
                 }
@@ -105,7 +108,8 @@ def upload_document():
             return jsonify({
                 'success': True,
                 'message': 'Document uploaded and indexed successfully',
-                'filename': filename,
+                'filename': original_filename,
+                'safe_filename': safe_filename,
                 's3_key': upload_result['key'],
                 'chunks': index_result['chunks_count'],
                 'statistics': {
