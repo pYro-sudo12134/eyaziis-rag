@@ -1002,27 +1002,41 @@
                         "semantic_roles": [
                             {
                                 "predicate": "глагол",
-                                "agent": "кто",
-                                "patient": "кого",
-                                "location": "где",
-                                "temporal": "когда"
+                                "agent": "субъект",
+                                "counter_agent": "контрагент",
+                                "patient": "объект",
+                                "content": "содержание",
+                                "addressee": "адресат",
+                                "recipient": "получатель",
+                                "instrument": "инструмент",
+                                "means": "средство",
+                                "location": "место",
+                                "source": "начальная точка",
+                                "destination": "конечная точка",
+                                "route": "маршрут",
+                                "manner": "способ",
+                                "condition": "условие",
+                                "motivation": "мотивировка",
+                                "cause": "причина",
+                                "result": "результат",
+                                "purpose": "цель",
+                                "aspect": "аспект",
+                                "quantity": "количество",
+                                "duration": "срок",
+                                "time": "время",
+                                "material": "материал",
+                                "price": "цена"
                             }
                         ],
-                        "semantic_relations": [
-                            {
-                                "type": "hypernym|hyponym|synonym|antonym|cause_effect|part_whole",
-                                "word1": "слово1",
-                                "word2": "слово2",
-                                "explanation": "пояснение"
-                            }
-                        ],
-                        "summary": {
-                            "predicate_center": "центральный предикат",
-                            "participants": ["участник1", "участник2"],
-                            "circumstances": ["обстоятельство1"],
-                            "complexity": "простое|сложное",
-                            "type": "повествовательное|вопросительное|побудительное"
-                        }
+                        "semantic_relations": [...],
+                        "valency_frame": {
+                            "predicate": "предикат",
+                            "required_actants": ["обязательные актанты"],
+                            "optional_actants": ["факультативные актанты"],
+                            "total_valencies": число,
+                            "description": "описание"
+                        },
+                        "summary": {...}
                     }
                 </div>
             `;
@@ -2026,21 +2040,42 @@
             if (analysis.semantic_roles && analysis.semantic_roles.length > 0) {
                 const rolesSection = document.createElement('div');
                 rolesSection.className = 'semantic-section';
-                rolesSection.innerHTML = '<h4 style="margin: 10px 0 5px 0; color: #764ba2;">Семантические роли</h4>';
+                rolesSection.innerHTML = '<h4 style="margin: 10px 0 5px 0; color: #764ba2;">Семантические роли (актанты)</h4>';
                 
                 analysis.semantic_roles.forEach((role, idx) => {
                     const roleDiv = document.createElement('div');
                     roleDiv.className = 'role-card';
-                    roleDiv.style.cssText = 'background: white; padding: 10px; margin: 8px 0; border-radius: 8px; border-left: 3px solid #764ba2;';
                     
                     let roleHtml = `<strong>Предикат:</strong> ${role.predicate || '—'}<br>`;
-                    if (role.agent) roleHtml += `<strong>Агент:</strong> ${role.agent}<br>`;
-                    if (role.patient) roleHtml += `<strong>Пациенс:</strong> ${role.patient}<br>`;
+                    
+                    if (role.agent) roleHtml += `<strong>Агент (субъект):</strong> ${role.agent}<br>`;
+                    if (role.counter_agent) roleHtml += `<strong>Контрагент:</strong> ${role.counter_agent}<br>`;
+                    if (role.patient) roleHtml += `<strong>Пациенс (объект):</strong> ${role.patient}<br>`;
+                    if (role.content) roleHtml += `<strong>Содержание:</strong> ${role.content}<br>`;
+                    if (role.addressee) roleHtml += `<strong>Адресат:</strong> ${role.addressee}<br>`;
+                    if (role.recipient) roleHtml += `<strong>Получатель:</strong> ${role.recipient}<br>`;
+                    
                     if (role.instrument) roleHtml += `<strong>Инструмент:</strong> ${role.instrument}<br>`;
+                    if (role.means) roleHtml += `<strong>Средство:</strong> ${role.means}<br>`;
+                    
                     if (role.location) roleHtml += `<strong>Локация:</strong> ${role.location}<br>`;
-                    if (role.temporal) roleHtml += `<strong>Время:</strong> ${role.temporal}<br>`;
+                    if (role.source) roleHtml += `<strong>Начальная точка:</strong> ${role.source}<br>`;
+                    if (role.destination) roleHtml += `<strong>Конечная точка:</strong> ${role.destination}<br>`;
+                    if (role.route) roleHtml += `<strong>Маршрут:</strong> ${role.route}<br>`;
+                    
+                    if (role.time) roleHtml += `<strong>Время:</strong> ${role.time}<br>`;
+                    if (role.duration) roleHtml += `<strong>Срок:</strong> ${role.duration}<br>`;
+                    if (role.quantity) roleHtml += `<strong>Количество:</strong> ${role.quantity}<br>`;
+                    
                     if (role.manner) roleHtml += `<strong>Способ:</strong> ${role.manner}<br>`;
+                    if (role.condition) roleHtml += `<strong>Условие:</strong> ${role.condition}<br>`;
+                    if (role.motivation) roleHtml += `<strong>Мотивировка:</strong> ${role.motivation}<br>`;
                     if (role.cause) roleHtml += `<strong>Причина:</strong> ${role.cause}<br>`;
+                    if (role.result) roleHtml += `<strong>Результат:</strong> ${role.result}<br>`;
+                    if (role.purpose) roleHtml += `<strong>Цель:</strong> ${role.purpose}<br>`;
+                    if (role.aspect) roleHtml += `<strong>Аспект:</strong> ${role.aspect}<br>`;
+                    if (role.material) roleHtml += `<strong>Материал:</strong> ${role.material}<br>`;
+                    if (role.price) roleHtml += `<strong>Цена/вознаграждение:</strong> ${role.price}<br>`;
                     
                     roleDiv.innerHTML = roleHtml;
                     rolesSection.appendChild(roleDiv);
@@ -2076,6 +2111,33 @@
                 container.appendChild(relationsSection);
             }
             
+            if (analysis.valency_frame) {
+                const valencySection = document.createElement('div');
+                valencySection.className = 'semantic-section';
+                valencySection.innerHTML = '<h4 style="margin: 15px 0 5px 0; color: #764ba2;">Валентностная рамка</h4>';
+                
+                const valencyDiv = document.createElement('div');
+                valencyDiv.style.cssText = 'background: white; padding: 10px; border-radius: 8px; font-size: 13px;';
+                
+                let valencyHtml = `<strong>Предикат:</strong> ${analysis.valency_frame.predicate || '—'}<br>`;
+                if (analysis.valency_frame.required_actants && analysis.valency_frame.required_actants.length > 0) {
+                    valencyHtml += `<strong>Обязательные актанты:</strong> ${analysis.valency_frame.required_actants.join(', ')}<br>`;
+                }
+                if (analysis.valency_frame.optional_actants && analysis.valency_frame.optional_actants.length > 0) {
+                    valencyHtml += `<strong>Факультативные актанты:</strong> ${analysis.valency_frame.optional_actants.join(', ')}<br>`;
+                }
+                if (analysis.valency_frame.total_valencies) {
+                    valencyHtml += `<strong>Общее число валентностей:</strong> ${analysis.valency_frame.total_valencies}<br>`;
+                }
+                if (analysis.valency_frame.description) {
+                    valencyHtml += `<strong>Описание:</strong> ${analysis.valency_frame.description}<br>`;
+                }
+                
+                valencyDiv.innerHTML = valencyHtml;
+                valencySection.appendChild(valencyDiv);
+                container.appendChild(valencySection);
+            }
+            
             if (analysis.summary) {
                 const summarySection = document.createElement('div');
                 summarySection.className = 'semantic-section';
@@ -2098,7 +2160,7 @@
                 container.innerHTML = '<div class="loading">Нет данных для семантического анализа</div>';
             }
         }
-        
+
         async function saveSemanticAnalysis() {
             if (!currentSemanticAnalysis) {
                 alert('Нет данных для сохранения. Сначала отправьте сообщение.');
